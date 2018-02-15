@@ -132,6 +132,7 @@ namespace Drawing_Fractals
 
             //List<Color> listMaterialColors = new List<Color>
             //{
+            //    //Black
             //    (Color)ColorTranslator.FromHtml("#000000"),
             //};
 
