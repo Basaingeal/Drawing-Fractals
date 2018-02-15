@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace Drawing_Fractals
 {
@@ -21,6 +22,15 @@ namespace Drawing_Fractals
         private Panel panel1 = new Panel();
         private PictureBox pictureBox1 = new PictureBox();
         private Timer timer = new Timer();
+
+        private readonly int length = Convert.ToInt32(ConfigurationManager.AppSettings["line-length"]);
+        private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
+        private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
+        private readonly int centerMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["center-multiplier"]);
+        private readonly bool centerIsX = Convert.ToBoolean(ConfigurationManager.AppSettings["center-as-x"]);
+        private readonly int colorGroupingAmount = Convert.ToInt32(ConfigurationManager.AppSettings["color-grouping-amount"]);
+        private readonly bool killOnEdge = Convert.ToBoolean(ConfigurationManager.AppSettings["kill-on-edge"]);
+        private readonly int layerLimit = Convert.ToInt32(ConfigurationManager.AppSettings["layer-limit"]);
 
         public Form1()
         {
@@ -90,16 +100,7 @@ namespace Drawing_Fractals
         {
             // Create a local version of the graphics object for the PictureBox.
             Graphics g = panel1.CreateGraphics();
-            const int length = 2;
-            const float width = 1f;
-            const string pathing = "000101";
-            //const string pathing = "00010101110111";
-            //const string pathing = "0";
-            const int centerMultiplier = 5;
-            const bool centerIsX = false;
-            const int colorGroupingAmount = 12;
-            const bool killOnEdge = false;
-            const int layerLimit = 0;
+            
             List<Color> listMaterialColors = new List<Color>
             {
                 //rainbow
