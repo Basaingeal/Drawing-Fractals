@@ -183,10 +183,10 @@ namespace Drawing_Fractals
 
             List<ChainedPoint> listAlivePoints = listAllPoints.Where(p => p.Alive).ToList();
 
-            if (!listAlivePoints.Any(p => (p.X > 0 && p.X <= 1028 * 1.5) && (p.Y > 0 && p.Y <= 1028 * 1.5)))
-            {
-                timer.Stop();
-            }
+            //if (!listAlivePoints.Any(p => (p.X > 0 && p.X <= 1028 * 1.5) && (p.Y > 0 && p.Y <= 1028 * 1.5)))
+            //{
+            //    timer.Stop();
+            //}
             Color selectedColor = listMaterialColors[colorIndex];
 
             if (numOfLayers % colorGroupingAmount == colorGroupingAmount - 1)
