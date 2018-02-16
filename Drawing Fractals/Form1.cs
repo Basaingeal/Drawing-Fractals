@@ -21,6 +21,9 @@ namespace Drawing_Fractals
         private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
         private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
         private readonly int layerGenerationRate = Convert.ToInt32(ConfigurationManager.AppSettings["layer-generation-rate"]);
+        private readonly int straightMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["straight-multiplier"]);
+        private readonly int diagonalMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["diagonal-multiplier"]);
+
         private int colorIndex;
 
         // Cache font instead of recreating font objects each time we paint.
@@ -52,8 +55,8 @@ namespace Drawing_Fractals
                     if ((objDiagonalPoint.FromDirection == (int)Directions.Southeast && (objDiagonalPoint.Y > objPoint.Y) && Math.Abs(Math.Abs(objPoint.Y - objDiagonalPoint.Y) - length) <= 1 && Math.Abs(objPoint.X - objDiagonalPoint.X) <= 1)
                         || (objDiagonalPoint.FromDirection == (int)Directions.Northwest && (objDiagonalPoint.X < objPoint.X) && Math.Abs(Math.Abs(objPoint.X - objDiagonalPoint.X) - length) <= 1 && Math.Abs(objPoint.Y - objDiagonalPoint.Y) <= 1))
                     {
-                        objPoint.X -= (length / 2);
-                        objPoint.Y += (length / 2);
+                        objPoint.X -= ((length * diagonalMultiplier) / 2);
+                        objPoint.Y += ((length * diagonalMultiplier) / 2);
                         objPoint.Alive = false;
                         break;
                     }
@@ -63,8 +66,8 @@ namespace Drawing_Fractals
                     if ((objDiagonalPoint.FromDirection == (int)Directions.Northeast && (objDiagonalPoint.Y < objPoint.Y) && Math.Abs(Math.Abs(objPoint.Y - objDiagonalPoint.Y) - length) <= 1 && Math.Abs(objPoint.X - objDiagonalPoint.X) <= 1)
                         || (objDiagonalPoint.FromDirection == (int)Directions.Southwest && (objDiagonalPoint.X < objPoint.X) && Math.Abs(Math.Abs(objPoint.X - objDiagonalPoint.X) - length) <= 1 && Math.Abs(objPoint.Y - objDiagonalPoint.Y) <= 1))
                     {
-                        objPoint.X -= (length / 2);
-                        objPoint.Y -= (length / 2);
+                        objPoint.X -= ((length * diagonalMultiplier) / 2);
+                        objPoint.Y -= ((length * diagonalMultiplier) / 2);
                         objPoint.Alive = false;
                         break;
                     }
@@ -74,8 +77,8 @@ namespace Drawing_Fractals
                     if ((objDiagonalPoint.FromDirection == (int)Directions.Northwest && (objDiagonalPoint.Y < objPoint.Y) && Math.Abs(Math.Abs(objPoint.Y - objDiagonalPoint.Y) - length) <= 1 && Math.Abs(objPoint.X - objDiagonalPoint.X) <= 1)
                         || (objDiagonalPoint.FromDirection == (int)Directions.Southeast && (objDiagonalPoint.X > objPoint.X) && Math.Abs(Math.Abs(objPoint.X - objDiagonalPoint.X) - length) <= 1 && Math.Abs(objPoint.Y - objDiagonalPoint.Y) <= 1))
                     {
-                        objPoint.X += (length / 2);
-                        objPoint.Y -= (length / 2);
+                        objPoint.X += ((length * diagonalMultiplier) / 2);
+                        objPoint.Y -= ((length * diagonalMultiplier) / 2);
                         objPoint.Alive = false;
                         break;
                     }
@@ -85,8 +88,8 @@ namespace Drawing_Fractals
                     if ((objDiagonalPoint.FromDirection == (int)Directions.Southwest && (objDiagonalPoint.Y > objPoint.Y) && Math.Abs(Math.Abs(objPoint.Y - objDiagonalPoint.Y) - length) <= 1 && Math.Abs(objPoint.X - objDiagonalPoint.X) <= 1)
                         || (objDiagonalPoint.FromDirection == (int)Directions.Northeast && (objDiagonalPoint.X > objPoint.X) && Math.Abs(Math.Abs(objPoint.X - objDiagonalPoint.X) - length) <= 1 && Math.Abs(objPoint.Y - objDiagonalPoint.Y) <= 1))
                     {
-                        objPoint.X += (length / 2);
-                        objPoint.Y += (length / 2);
+                        objPoint.X += ((length * diagonalMultiplier) / 2);
+                        objPoint.Y += ((length * diagonalMultiplier) / 2);
                         objPoint.Alive = false;
                         break;
                     }
@@ -98,6 +101,10 @@ namespace Drawing_Fractals
 
         private void DrawFractal()
         {
+            int intWindowHeight = Convert.ToInt32(ConfigurationManager.AppSettings["window-height"]);
+            const double goldenRatio = 1.61803398874989484820458683436;
+
+            int intWindowWidth = (int)Math.Round(intWindowHeight / (1 / goldenRatio));
             // Create a local version of the graphics object for the PictureBox.
             Graphics g = panel1.CreateGraphics();
 
@@ -183,7 +190,7 @@ namespace Drawing_Fractals
 
             if (countLayers == 0)
             {
-                ChainedPoint centerPoint = new ChainedPoint(panel1.Right / 2, panel1.Bottom / 2, (int)Directions.Center);
+                ChainedPoint centerPoint = new ChainedPoint(intWindowWidth / 2, intWindowHeight / 2, (int)Directions.Center);
                 //ChainedPoint centerPoint = new ChainedPoint(length, length, (int)Directions.Southeast);
 
                 Pen originalPen = new Pen(listMaterialColors[0])
@@ -232,13 +239,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y, (int)Directions.West);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y, (int)Directions.East);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * straightMultiplier), objChainedPoint.Y, (int)Directions.West);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * straightMultiplier), objChainedPoint.Y, (int)Directions.East);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y - length, (int)Directions.Northwest);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y - length, (int)Directions.Northeast);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northwest);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northeast);
                             }
                             break;
                         }
@@ -246,13 +253,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y - length, (int)Directions.Northwest);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y + length, (int)Directions.Southeast);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northwest);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southeast);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - length, (int)Directions.North);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y, (int)Directions.East);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - (length * straightMultiplier), (int)Directions.North);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * straightMultiplier), objChainedPoint.Y, (int)Directions.East);
                             }
                             break;
                         }
@@ -260,13 +267,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - length, (int)Directions.North);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + length, (int)Directions.South);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - (length * straightMultiplier), (int)Directions.North);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + (length * straightMultiplier), (int)Directions.South);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y - length, (int)Directions.Northeast);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y + length, (int)Directions.Southeast);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northeast);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southeast);
                             }
                             break;
                         }
@@ -274,13 +281,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y - length, (int)Directions.Northeast);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y + length, (int)Directions.Southwest);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northeast);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southwest);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y, (int)Directions.East);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + length, (int)Directions.South);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * straightMultiplier), objChainedPoint.Y, (int)Directions.East);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + (length * straightMultiplier), (int)Directions.South);
                             }
                             break;
                         }
@@ -288,13 +295,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y, (int)Directions.East);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y, (int)Directions.West);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * straightMultiplier), objChainedPoint.Y, (int)Directions.East);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * straightMultiplier), objChainedPoint.Y, (int)Directions.West);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y + length, (int)Directions.Southeast);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y + length, (int)Directions.Southwest);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southeast);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southwest);
                             }
                             break;
                         }
@@ -302,13 +309,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y + length, (int)Directions.Southeast);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y - length, (int)Directions.Northwest);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southeast);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northwest);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + length, (int)Directions.South);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y, (int)Directions.West);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + (length * straightMultiplier), (int)Directions.South);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * straightMultiplier), objChainedPoint.Y, (int)Directions.West);
                             }
                             break;
                         }
@@ -316,13 +323,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + length, (int)Directions.South);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - length, (int)Directions.North);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y + (length * straightMultiplier), (int)Directions.South);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - (length * straightMultiplier), (int)Directions.North);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y + length, (int)Directions.Southwest);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y - length, (int)Directions.Northwest);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southwest);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northwest);
                             }
                             break;
                         }
@@ -330,13 +337,13 @@ namespace Drawing_Fractals
                         {
                             if (boolTLayer)
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y + length, (int)Directions.Southwest);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X + length, objChainedPoint.Y - length, (int)Directions.Northeast);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * diagonalMultiplier), objChainedPoint.Y + (length * diagonalMultiplier), (int)Directions.Southwest);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X + (length * diagonalMultiplier), objChainedPoint.Y - (length * diagonalMultiplier), (int)Directions.Northeast);
                             }
                             else
                             {
-                                newPoint1 = new ChainedPoint(objChainedPoint.X - length, objChainedPoint.Y, (int)Directions.West);
-                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - length, (int)Directions.North);
+                                newPoint1 = new ChainedPoint(objChainedPoint.X - (length * straightMultiplier), objChainedPoint.Y, (int)Directions.West);
+                                newPoint2 = new ChainedPoint(objChainedPoint.X, objChainedPoint.Y - (length * straightMultiplier), (int)Directions.North);
                             }
                             break;
                         }
@@ -383,6 +390,15 @@ namespace Drawing_Fractals
                 for (int i = 0; i < listNewPoints.Count; i++)
                 {
                     ChainedPoint newPoint = listNewPoints[i];
+                    //kill on edge
+                    if (killOnEdge)
+                    {
+
+                        if (newPoint.X <= (length * 3) || newPoint.X > (intWindowWidth - (length * 3) -1) || (newPoint.Y <= (length * 3) || newPoint.Y > (intWindowHeight - (length * 3) - 1)))
+                        {
+                            continue;
+                        }
+                    }
                     if (newPoint.IsDiagonal())
                     {
                         newPoint = CheckForDiagonalIntersection(newPoint, listAllPoints.Where(p => p.IsDiagonal()).ToList(), length);
@@ -396,12 +412,6 @@ namespace Drawing_Fractals
                         {
                             objPointToKill.Alive = false;
                         }
-                    }
-
-                    //kill on edge
-                    if (killOnEdge & (newPoint.X <= 0 || newPoint.X >= 1004 || newPoint.Y <= 0 || newPoint.Y >= 1004))
-                    {
-                        newPoint.Alive = false;
                     }
 
                     newPoint.LayerIndexAded = countLayers;
@@ -418,6 +428,7 @@ namespace Drawing_Fractals
             {
                 timer.Stop();
             }
+
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
@@ -428,7 +439,7 @@ namespace Drawing_Fractals
             // Connect the Paint event of the PictureBox to the event handler method.
             //pictureBox1.Paint += this.pictureBox1_Paint;
 
-            FormBorderStyle = FormBorderStyle.None;
+            //FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             Location = new Point(0, 0);
 

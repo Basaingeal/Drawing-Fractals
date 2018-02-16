@@ -13,6 +13,7 @@ namespace Drawing_Fractals
 
         public bool Alive { get; set; }
         public int LayerIndexAded { get; set; }
+        
 
         public bool Equals(ChainedPoint other)
         {
@@ -45,9 +46,20 @@ namespace Drawing_Fractals
                 || FromDirection == (int)Directions.Northeast;
         }
 
+
         public bool IsStraight()
         {
             return !IsDiagonal();
+        }
+        public bool IsHorizontal()
+        {
+            return FromDirection == (int)Directions.West
+                || FromDirection == (int)Directions.East;
+        }
+
+        public bool IsVertical()
+        {
+            return IsStraight() && !IsHorizontal();
         }
     }
 }
