@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using System.Configuration;
 
 namespace Drawing_Fractals
 {
@@ -12,6 +12,15 @@ namespace Drawing_Fractals
     {
         public int numOfLayers;
 
+        private readonly bool centerIsX = Convert.ToBoolean(ConfigurationManager.AppSettings["center-as-x"]);
+        private readonly int centerMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["center-multiplier"]);
+        private readonly int colorGroupingAmount = Convert.ToInt32(ConfigurationManager.AppSettings["color-grouping-amount"]);
+        private readonly bool killOnEdge = Convert.ToBoolean(ConfigurationManager.AppSettings["kill-on-edge"]);
+        private readonly int layerLimit = Convert.ToInt32(ConfigurationManager.AppSettings["layer-limit"]);
+        private readonly int length = Convert.ToInt32(ConfigurationManager.AppSettings["line-length"]);
+        private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
+        private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
+        private readonly int layerGenerationRate = Convert.ToInt32(ConfigurationManager.AppSettings["layer-generation-rate"]);
         private int colorIndex;
 
         // Cache font instead of recreating font objects each time we paint.
@@ -22,15 +31,6 @@ namespace Drawing_Fractals
         private Panel panel1 = new Panel();
         private PictureBox pictureBox1 = new PictureBox();
         private Timer timer = new Timer();
-
-        private readonly int length = Convert.ToInt32(ConfigurationManager.AppSettings["line-length"]);
-        private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
-        private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
-        private readonly int centerMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["center-multiplier"]);
-        private readonly bool centerIsX = Convert.ToBoolean(ConfigurationManager.AppSettings["center-as-x"]);
-        private readonly int colorGroupingAmount = Convert.ToInt32(ConfigurationManager.AppSettings["color-grouping-amount"]);
-        private readonly bool killOnEdge = Convert.ToBoolean(ConfigurationManager.AppSettings["kill-on-edge"]);
-        private readonly int layerLimit = Convert.ToInt32(ConfigurationManager.AppSettings["layer-limit"]);
 
         public Form1()
         {
@@ -100,7 +100,7 @@ namespace Drawing_Fractals
         {
             // Create a local version of the graphics object for the PictureBox.
             Graphics g = panel1.CreateGraphics();
-            
+
             List<Color> listMaterialColors = new List<Color>
             {
                 //rainbow
@@ -124,6 +124,27 @@ namespace Drawing_Fractals
 
             //List<Color> listMaterialColors = new List<Color>
             //{
+            //    //alternating opposites rainbow
+            //    (Color)ColorTranslator.FromHtml("#F44336"), //1
+            //    (Color)ColorTranslator.FromHtml("#009688"), //9
+            //    (Color)ColorTranslator.FromHtml("#FF5722"), //2
+            //    (Color)ColorTranslator.FromHtml("#00BCD4"), //10
+            //    (Color)ColorTranslator.FromHtml("#FF9800"), //3
+            //    (Color)ColorTranslator.FromHtml("#03A9F4"), //11
+            //    (Color)ColorTranslator.FromHtml("#FFC107"), //4
+            //    (Color)ColorTranslator.FromHtml("#2196F3"), //12
+            //    (Color)ColorTranslator.FromHtml("#FFEB3B"), //5
+            //    (Color)ColorTranslator.FromHtml("#3F51B5"), //13
+            //    (Color)ColorTranslator.FromHtml("#CDDC39"), //6
+            //    (Color)ColorTranslator.FromHtml("#673AB7"), //14
+            //    (Color)ColorTranslator.FromHtml("#8BC34A"), //7
+            //    (Color)ColorTranslator.FromHtml("#9C27B0"), //15
+            //    (Color)ColorTranslator.FromHtml("#4CAF50"), //8
+            //    (Color)ColorTranslator.FromHtml("#E91E63"), //16
+            //};
+
+            //List<Color> listMaterialColors = new List<Color>
+            //{
             //    //Google colors
             //    (Color)ColorTranslator.FromHtml("#db3236"),
             //    (Color)ColorTranslator.FromHtml("#f4c20d"),
@@ -134,7 +155,7 @@ namespace Drawing_Fractals
             //List<Color> listMaterialColors = new List<Color>
             //{
             //    //Black
-            //    (Color)ColorTranslator.FromHtml("#000000"),
+            //    (Color)ColorTranslator.FromHtml("#000000")
             //};
 
             //List<Color> listMaterialColors = new List<Color>
@@ -364,7 +385,6 @@ namespace Drawing_Fractals
                     ChainedPoint newPoint = listNewPoints[i];
                     if (newPoint.IsDiagonal())
                     {
-
                         newPoint = CheckForDiagonalIntersection(newPoint, listAllPoints.Where(p => p.IsDiagonal()).ToList(), length);
                     }
                     g.DrawLine(rainbowPen, objChainedPoint.ToPoint(), newPoint.ToPoint());
@@ -420,7 +440,7 @@ namespace Drawing_Fractals
             //this.Controls.Add(pictureBox1);
             Controls.Add(panel1);
 
-            timer.Interval = 100;
+            timer.Interval = layerGenerationRate;
             timer.Tick += Timer_Tick;
 
             timer.Enabled = true;
