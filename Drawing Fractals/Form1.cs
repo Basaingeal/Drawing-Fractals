@@ -10,7 +10,7 @@ namespace Drawing_Fractals
 {
     public partial class Form1 : Form
     {
-        public int numOfLayers;
+        public int countLayers;
 
         private readonly bool centerIsX = Convert.ToBoolean(ConfigurationManager.AppSettings["center-as-x"]);
         private readonly int centerMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["center-multiplier"]);
@@ -181,7 +181,7 @@ namespace Drawing_Fractals
             //    (Color)ColorTranslator.FromHtml("#c62828"),
             //};
 
-            if (numOfLayers == 0)
+            if (countLayers == 0)
             {
                 ChainedPoint centerPoint = new ChainedPoint(panel1.Right / 2, panel1.Bottom / 2, (int)Directions.Center);
                 //ChainedPoint centerPoint = new ChainedPoint(length, length, (int)Directions.Southeast);
@@ -196,7 +196,7 @@ namespace Drawing_Fractals
                 listAllPoints.Add(centerPoint);
             }
 
-            if (numOfLayers > garbageCollectionSize * 2)
+            if (countLayers > garbageCollectionSize * 2)
             {
                 //listAllPoints.RemoveAll(p => p.LayerIndexAded < garbageCollectionSize);
                 garbageCollectionSize *= 2;
@@ -210,7 +210,7 @@ namespace Drawing_Fractals
             //}
             Color selectedColor = listMaterialColors[colorIndex];
 
-            if (numOfLayers % colorGroupingAmount == colorGroupingAmount - 1)
+            if (countLayers % colorGroupingAmount == colorGroupingAmount - 1)
             {
                 colorIndex++;
                 if (colorIndex == listMaterialColors.Count)
@@ -225,7 +225,7 @@ namespace Drawing_Fractals
                 ChainedPoint newPoint2 = null;
                 ChainedPoint newPoint3 = null;
                 ChainedPoint newPoint4 = null;
-                bool boolTLayer = InterpretPathing(pathing, numOfLayers);
+                bool boolTLayer = InterpretPathing(pathing, countLayers);
                 switch (objChainedPoint.FromDirection)
                 {
                     case (int)Directions.North:
@@ -404,7 +404,7 @@ namespace Drawing_Fractals
                         newPoint.Alive = false;
                     }
 
-                    newPoint.LayerIndexAded = numOfLayers;
+                    newPoint.LayerIndexAded = countLayers;
 
                     listAllPoints.Add(newPoint);
                 }
@@ -414,7 +414,7 @@ namespace Drawing_Fractals
                 objChainedPoint.Alive = false;
             }
 
-            if (layerLimit > 0 && layerLimit == numOfLayers + 1)
+            if (layerLimit > 0 && layerLimit == countLayers + 1)
             {
                 timer.Stop();
             }
@@ -462,14 +462,14 @@ namespace Drawing_Fractals
         {
             DrawFractal();
 
-            numOfLayers++;
+            countLayers++;
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
             DrawFractal();
 
-            numOfLayers++;
+            countLayers++;
         }
     }
 }
