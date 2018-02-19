@@ -26,6 +26,8 @@ namespace Drawing_Fractals
                 Size = new Size(intWindowWidth, intWindowHeight)
             };
 
+            myForm.AutoScroll = true;
+
             Application.Run(myForm);
         }
     }
