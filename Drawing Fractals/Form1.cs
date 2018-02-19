@@ -23,6 +23,7 @@ namespace Drawing_Fractals
         private readonly int layerGenerationRate = Convert.ToInt32(ConfigurationManager.AppSettings["layer-generation-rate"]);
         private readonly int straightMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["straight-multiplier"]);
         private readonly int diagonalMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["diagonal-multiplier"]);
+        private readonly string color = ConfigurationManager.AppSettings["color"];
 
         private int colorIndex;
 
@@ -108,85 +109,114 @@ namespace Drawing_Fractals
             // Create a local version of the graphics object for the PictureBox.
             Graphics g = panel1.CreateGraphics();
 
-            List<Color> listMaterialColors = new List<Color>
+            List<Color> listMaterialColors = new List<Color>();
+
+            switch (color)
             {
-                //rainbow
-                (Color)ColorTranslator.FromHtml("#F44336"),
-                (Color)ColorTranslator.FromHtml("#FF5722"),
-                (Color)ColorTranslator.FromHtml("#FF9800"),
-                (Color)ColorTranslator.FromHtml("#FFC107"),
-                (Color)ColorTranslator.FromHtml("#FFEB3B"),
-                (Color)ColorTranslator.FromHtml("#CDDC39"),
-                (Color)ColorTranslator.FromHtml("#8BC34A"),
-                (Color)ColorTranslator.FromHtml("#4CAF50"),
-                (Color)ColorTranslator.FromHtml("#009688"),
-                (Color)ColorTranslator.FromHtml("#00BCD4"),
-                (Color)ColorTranslator.FromHtml("#03A9F4"),
-                (Color)ColorTranslator.FromHtml("#2196F3"),
-                (Color)ColorTranslator.FromHtml("#3F51B5"),
-                (Color)ColorTranslator.FromHtml("#673AB7"),
-                (Color)ColorTranslator.FromHtml("#9C27B0"),
-                (Color)ColorTranslator.FromHtml("#E91E63"),
-            };
+                case "rainbow":
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            //rainbow
+                            ColorTranslator.FromHtml("#F44336"),
+                            ColorTranslator.FromHtml("#FF5722"),
+                            ColorTranslator.FromHtml("#FF9800"),
+                            ColorTranslator.FromHtml("#FFC107"),
+                            ColorTranslator.FromHtml("#FFEB3B"),
+                            ColorTranslator.FromHtml("#CDDC39"),
+                            ColorTranslator.FromHtml("#8BC34A"),
+                            ColorTranslator.FromHtml("#4CAF50"),
+                            ColorTranslator.FromHtml("#009688"),
+                            ColorTranslator.FromHtml("#00BCD4"),
+                            ColorTranslator.FromHtml("#03A9F4"),
+                            ColorTranslator.FromHtml("#2196F3"),
+                            ColorTranslator.FromHtml("#3F51B5"),
+                            ColorTranslator.FromHtml("#673AB7"),
+                            ColorTranslator.FromHtml("#9C27B0"),
+                            ColorTranslator.FromHtml("#E91E63"),
+                        };
+                        break;
+                    }
+                case "alt-rainbow":
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            //rainbow
+                            ColorTranslator.FromHtml("#F44336"), //1
+                            ColorTranslator.FromHtml("#009688"), //9
+                            ColorTranslator.FromHtml("#FF5722"), //2
+                            ColorTranslator.FromHtml("#00BCD4"), //10
+                            ColorTranslator.FromHtml("#FF9800"), //3
+                            ColorTranslator.FromHtml("#03A9F4"), //11
+                            ColorTranslator.FromHtml("#FFC107"), //4
+                            ColorTranslator.FromHtml("#2196F3"), //12
+                            ColorTranslator.FromHtml("#FFEB3B"), //5
+                            ColorTranslator.FromHtml("#3F51B5"), //13
+                            ColorTranslator.FromHtml("#CDDC39"), //6
+                            ColorTranslator.FromHtml("#673AB7"), //14
+                            ColorTranslator.FromHtml("#8BC34A"), //7
+                            ColorTranslator.FromHtml("#9C27B0"), //15
+                            ColorTranslator.FromHtml("#4CAF50"), //8
+                            ColorTranslator.FromHtml("#E91E63"), //16
+                        };
+                        break;
+                    }
+                case "reds":
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            ColorTranslator.FromHtml("#b71c1c"),
+                            ColorTranslator.FromHtml("#c62828"),
+                            ColorTranslator.FromHtml("#d32f2f"),
+                            ColorTranslator.FromHtml("#e53935"),
+                            ColorTranslator.FromHtml("#f44336"),
+                            ColorTranslator.FromHtml("#ef5350"),
+                            ColorTranslator.FromHtml("#e57373"),
+                            ColorTranslator.FromHtml("#ef9a9a"),
+                            ColorTranslator.FromHtml("#ffcdd2"),
+                            ColorTranslator.FromHtml("#ffebee"),
+                            ColorTranslator.FromHtml("#ffcdd2"),
+                            ColorTranslator.FromHtml("#ef9a9a"),
+                            ColorTranslator.FromHtml("#e57373"),
+                            ColorTranslator.FromHtml("#ef5350"),
+                            ColorTranslator.FromHtml("#f44336"),
+                            ColorTranslator.FromHtml("#e53935"),
+                            ColorTranslator.FromHtml("#d32f2f"),
+                            ColorTranslator.FromHtml("#c62828")
+                        };
+                        break;
+                    }
+                case "google":
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            ColorTranslator.FromHtml("#db3236"),
+                            ColorTranslator.FromHtml("#f4c20d"),
+                            ColorTranslator.FromHtml("#3cba54"),
+                            ColorTranslator.FromHtml("#4885ed")
+                        };
+                        break;
+                    }
 
-            //List<Color> listMaterialColors = new List<Color>
-            //{
-            //    //alternating opposites rainbow
-            //    (Color)ColorTranslator.FromHtml("#F44336"), //1
-            //    (Color)ColorTranslator.FromHtml("#009688"), //9
-            //    (Color)ColorTranslator.FromHtml("#FF5722"), //2
-            //    (Color)ColorTranslator.FromHtml("#00BCD4"), //10
-            //    (Color)ColorTranslator.FromHtml("#FF9800"), //3
-            //    (Color)ColorTranslator.FromHtml("#03A9F4"), //11
-            //    (Color)ColorTranslator.FromHtml("#FFC107"), //4
-            //    (Color)ColorTranslator.FromHtml("#2196F3"), //12
-            //    (Color)ColorTranslator.FromHtml("#FFEB3B"), //5
-            //    (Color)ColorTranslator.FromHtml("#3F51B5"), //13
-            //    (Color)ColorTranslator.FromHtml("#CDDC39"), //6
-            //    (Color)ColorTranslator.FromHtml("#673AB7"), //14
-            //    (Color)ColorTranslator.FromHtml("#8BC34A"), //7
-            //    (Color)ColorTranslator.FromHtml("#9C27B0"), //15
-            //    (Color)ColorTranslator.FromHtml("#4CAF50"), //8
-            //    (Color)ColorTranslator.FromHtml("#E91E63"), //16
-            //};
+                case "black":
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            ColorTranslator.FromHtml("#000000")
+                        };
+                        break;
+                    }
+                default:
+                    {
+                        listMaterialColors = new List<Color>
+                        {
+                            //Black
+                            ColorTranslator.FromHtml("#000000")
+                        };
+                        break;
+                    }
 
-            //List<Color> listMaterialColors = new List<Color>
-            //{
-            //    //Google colors
-            //    (Color)ColorTranslator.FromHtml("#db3236"),
-            //    (Color)ColorTranslator.FromHtml("#f4c20d"),
-            //    (Color)ColorTranslator.FromHtml("#3cba54"),
-            //    (Color)ColorTranslator.FromHtml("#4885ed")
-            //};
-
-            //List<Color> listMaterialColors = new List<Color>
-            //{
-            //    //Black
-            //    (Color)ColorTranslator.FromHtml("#000000")
-            //};
-
-            //List<Color> listMaterialColors = new List<Color>
-            //{
-            //    //reds
-            //    (Color)ColorTranslator.FromHtml("#b71c1c"),
-            //    (Color)ColorTranslator.FromHtml("#c62828"),
-            //    (Color)ColorTranslator.FromHtml("#d32f2f"),
-            //    (Color)ColorTranslator.FromHtml("#e53935"),
-            //    (Color)ColorTranslator.FromHtml("#f44336"),
-            //    (Color)ColorTranslator.FromHtml("#ef5350"),
-            //    (Color)ColorTranslator.FromHtml("#e57373"),
-            //    (Color)ColorTranslator.FromHtml("#ef9a9a"),
-            //    (Color)ColorTranslator.FromHtml("#ffcdd2"),
-            //    (Color)ColorTranslator.FromHtml("#ffebee"),
-            //    (Color)ColorTranslator.FromHtml("#ffcdd2"),
-            //    (Color)ColorTranslator.FromHtml("#ef9a9a"),
-            //    (Color)ColorTranslator.FromHtml("#e57373"),
-            //    (Color)ColorTranslator.FromHtml("#ef5350"),
-            //    (Color)ColorTranslator.FromHtml("#f44336"),
-            //    (Color)ColorTranslator.FromHtml("#e53935"),
-            //    (Color)ColorTranslator.FromHtml("#d32f2f"),
-            //    (Color)ColorTranslator.FromHtml("#c62828"),
-            //};
+            }
 
             if (countLayers == 0)
             {
@@ -394,7 +424,7 @@ namespace Drawing_Fractals
                     if (killOnEdge)
                     {
 
-                        if (newPoint.X <= (length * 3) || newPoint.X > (intWindowWidth - (length * 3) -1) || (newPoint.Y <= (length * 3) || newPoint.Y > (intWindowHeight - (length * 3) - 1)))
+                        if (newPoint.X <= (length * 3) || newPoint.X > (intWindowWidth - (length * 3) - 1) || (newPoint.Y <= (length * 3) || newPoint.Y > (intWindowHeight - (length * 3) - 1)))
                         {
                             continue;
                         }
