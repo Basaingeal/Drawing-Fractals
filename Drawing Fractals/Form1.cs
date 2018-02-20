@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -13,39 +15,244 @@ namespace Drawing_Fractals
     {
         public int countLayers;
 
+        public int intImageHeight = Convert.ToInt32(ConfigurationManager.AppSettings["image-height"]);
         private readonly bool centerIsX = Convert.ToBoolean(ConfigurationManager.AppSettings["center-as-x"]);
         private readonly int centerMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["center-multiplier"]);
+        private readonly string color = ConfigurationManager.AppSettings["color"];
         private readonly int colorGroupingAmount = Convert.ToInt32(ConfigurationManager.AppSettings["color-grouping-amount"]);
+        private readonly int diagonalMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["diagonal-multiplier"]);
+        private readonly bool generateInBackground = Convert.ToBoolean(ConfigurationManager.AppSettings["generate-in-background"]);
         private readonly bool killOnEdge = Convert.ToBoolean(ConfigurationManager.AppSettings["kill-on-edge"]);
+        private readonly int layerGenerationRate = Convert.ToInt32(ConfigurationManager.AppSettings["layer-generation-rate"]);
         private readonly int layerLimit = Convert.ToInt32(ConfigurationManager.AppSettings["layer-limit"]);
         private readonly int length = Convert.ToInt32(ConfigurationManager.AppSettings["line-length"]);
         private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
-        private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
-        private readonly int layerGenerationRate = Convert.ToInt32(ConfigurationManager.AppSettings["layer-generation-rate"]);
         private readonly int straightMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["straight-multiplier"]);
-        private readonly int diagonalMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["diagonal-multiplier"]);
-        private readonly string color = ConfigurationManager.AppSettings["color"];
-        private readonly bool generateInBackground = Convert.ToBoolean(ConfigurationManager.AppSettings["generate-in-background"]);
-
-        private System.Drawing.Bitmap TheBitmap;
-
+        private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
         private int colorIndex;
-
         // Cache font instead of recreating font objects each time we paint.
         private Font fnt = new Font("Arial", 10);
 
         private int garbageCollectionSize = 8;
         private List<ChainedPoint> listAllPoints = new List<ChainedPoint>();
-        private DoubleBufferPanel panel1 = new DoubleBufferPanel();
-        private PictureBox pictureBox1 = new PictureBox();
+        private Point movingPoint = Point.Empty;
+        //private DoubleBufferPanel panel1 = new DoubleBufferPanel();
+        private bool panning = false;
+        //private PictureBox pictureBox1 = new PictureBox();
+        private Point startingPoint = Point.Empty;
+        private string strSavePath = "";
+        private System.Drawing.Bitmap TheBitmap;
+        private DateTime timeLastRefresh = DateTime.Now;
         //private Timer timer = new Timer();
+
+        private TimeSpan totalDuration;
+        private DateTime dtProcessStart;
+
+        private DateTime dtLayerStart;
+        private TimeSpan LayerDuration;
+
+        private DateTime dtPointStart;
+        private TimeSpan PointDuration;
+
+        private long longStraightTicks = 1;
+        private long longDiagonalTicks;
 
         public Form1()
         {
             InitializeComponent();
         }
 
+        private void Form1_Load(object sender, System.EventArgs e)
+        {
+
+            // Dock the PictureBox to the form and set its background to white.
+            //pictureBox1.Dock = DockStyle.Fill;
+            //pictureBox1.BackColor = Color.Gray;
+            // Connect the Paint event of the PictureBox to the event handler method.
+            //pictureBox1.Paint += this.pictureBox1_Paint;
+
+            //FormBorderStyle = FormBorderStyle.None;
+            StartPosition = FormStartPosition.Manual;
+            Location = new Point(0, 0);
+
+            panel1.BackColor = ColorTranslator.FromHtml("#000000");
+
+            if (!generateInBackground)
+            {
+                pictureBox1.Paint += PictureBox1_Paint;
+            }
+
+            panel1.Dock = DockStyle.Fill;
+
+            int intImageHeight = Convert.ToInt32(ConfigurationManager.AppSettings["image-height"]);
+            int intWindowHeight = Convert.ToInt32(ConfigurationManager.AppSettings["window-height"]);
+            const double goldenRatio = 1.61803398874989484820458683436;
+
+            int intWindowWidth = (int)Math.Round(intWindowHeight / (1 / goldenRatio));
+
+            TheBitmap = new System.Drawing.Bitmap(intImageHeight, intImageHeight);
+
+            pictureBox1.Height = intWindowHeight;
+            pictureBox1.Width = intWindowWidth;
+
+            pictureBox1.MouseDown += PictureBox1_MouseDown;
+            pictureBox1.MouseUp += PictureBox1_MouseUp;
+            pictureBox1.MouseMove += PictureBox1_MouseMove;
+
+            movingPoint = new Point(-(intImageHeight / 2) + intWindowWidth / 2, -(intImageHeight / 2) + intWindowHeight / 2);
+
+            pictureBox1.BackgroundImageLayout = ImageLayout.Stretch;
+
+
+            zoomSlider.Minimum = 1;
+            zoomSlider.Maximum = 5;
+            zoomSlider.SmallChange = 1;
+            zoomSlider.LargeChange = 1;
+            zoomSlider.UseWaitCursor = false;
+
+            lblLayerCount.BackColor = Color.Transparent;
+            lblLayerCount.Parent = pictureBox1;
+
+            lblLastLayerDuration.BackColor = Color.Transparent;
+            lblLastLayerDuration.Parent = pictureBox1;
+
+            lblAverageLayerDuration.BackColor = Color.Transparent;
+            lblAverageLayerDuration.Parent = pictureBox1;
+
+            lblLastPointDuration.BackColor = Color.Transparent;
+            lblLastPointDuration.Parent = pictureBox1;
+
+            lblAveragePointDuration.BackColor = Color.Transparent;
+            lblAveragePointDuration.Parent = pictureBox1;
+
+            lblTotalDuration.BackColor = Color.Transparent;
+            lblTotalDuration.Parent = pictureBox1;
+
+            lblPointCount.BackColor = Color.Transparent;
+            lblPointCount.Parent = pictureBox1;
+
+            lblDirectionRatio.BackColor = Color.Transparent;
+            lblDirectionRatio.Parent = pictureBox1;
+            //panel1.AutoScroll = true;
+
+            // Add the PictureBox control to the Form.
+            //this.Controls.Add(pictureBox1);
+            //Controls.Add(panel1);
+
+            //panel1.Controls.Add(pictureBox1);
+
+            //panel1.Controls.Add(zoomSlider);
+
+            //pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+
+            pictureBox1.Click += PictureBox1_Click;
+            pictureBox1.Image = TheBitmap;
+
+            pictureBox1.Invalidate();
+            //timer.Interval = layerGenerationRate;
+            //timer.Tick += Timer_Tick;
+
+            //timer.Enabled = true;
+
+            //timer.Start();
+
+            BackgroundWorker backgroundWorker = new BackgroundWorker();
+
+            backgroundWorker.DoWork += BackgroundWorker1_DoWork;
+            backgroundWorker.RunWorkerCompleted += backgroundWorker1_RunWorkerCompleted;
+            backgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
+            backgroundWorker.WorkerReportsProgress = true;
+
+            Graphics g = Graphics.FromImage(TheBitmap);
+
+            dtProcessStart = DateTime.Now;
+
+            backgroundWorker.RunWorkerAsync(g);
+
+            //Task.Factory.StartNew(() =>
+            //{
+            //    using (Graphics g = Graphics.FromImage(TheBitmap))
+            //    {
+            //        while (layerLimit == 0 || layerLimit > countLayers)
+            //        {
+            //            DrawFractal(g);
+            //            countLayers++;
+            //        }
+            //            //do your drawing routines here
+            //        }
+            //        //invoke an action against the main thread to draw the buffer to the background image of the main form.
+            //        this.Invoke(new Action(pictureBox1.Refresh));
+            //});
+            //DrawFractal();
+
+            //pictureBox1.Refresh();
+        }
+
         public enum Directions { North, Northeast, East, Southeast, South, Southwest, West, Northwest, Center }
+
+        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if (!generateInBackground)
+            {
+                if (DateTime.Now.AddMilliseconds(-33) > timeLastRefresh)
+                {
+                    pictureBox1.Refresh();
+                    UpdateLabels();
+
+                }
+            }
+        }
+
+        private void UpdateLabels()
+        {
+            timeLastRefresh = DateTime.Now;
+            lblLayerCount.Text = "Layers: " + countLayers;
+            lblLastLayerDuration.Text = "Last Layer Duration: " + LayerDuration.ToString();
+            lblAverageLayerDuration.Text = "Average Layer Duration: " + new TimeSpan(DateTime.Now.Subtract(dtProcessStart).Ticks / countLayers).ToString();
+            totalDuration = DateTime.Now.Subtract(dtProcessStart);
+            lblTotalDuration.Text = "Total Duration:  " + totalDuration.ToString();
+
+            lblLastPointDuration.Text = "Last Point Duration: " + PointDuration.ToString();
+            lblAveragePointDuration.Text = "Average Point Duration: " + new TimeSpan(DateTime.Now.Subtract(dtProcessStart).Ticks / listAllPoints.Count).ToString();
+
+            lblPointCount.Text = "Points: " + listAllPoints.Count;
+
+            lblDirectionRatio.Text = "Diagonal to Straight Processing Time Ratio:  " + Math.Round((decimal)longDiagonalTicks / longStraightTicks, 3);
+        }
+
+        private void BackgroundWorker1_DoWork(object sender,
+            DoWorkEventArgs e)
+        {
+            // Get the BackgroundWorker that raised this event.
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            // Assign the result of the computation
+            // to the Result property of the DoWorkEventArgs
+            // object. This is will be available to the
+            // RunWorkerCompleted eventhandler.
+            Graphics g = (Graphics)e.Argument;
+            g.FillRectangle(new SolidBrush(ColorTranslator.FromHtml("#F5F5F6")), new Rectangle(0, 0, TheBitmap.Width, TheBitmap.Height));
+            while (layerLimit == 0 || layerLimit > countLayers)
+            {
+                DrawFractal(g, worker, e);
+                countLayers++;
+                worker.ReportProgress(0, "right");
+            }
+
+            if (generateInBackground)
+            {
+                TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
+            }
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            pictureBox1.Refresh();
+            button1.BackColor = ColorTranslator.FromHtml("#4CAF50");
+            button1.ForeColor = Color.White;
+
+            UpdateLabels();
+        }
 
         private ChainedPoint CheckForDiagonalIntersection(ChainedPoint objPoint, List<ChainedPoint> listDiagonalPoints, int length)
         {
@@ -116,7 +323,8 @@ namespace Drawing_Fractals
 
             if (countLayers == 0)
             {
-                ChainedPoint centerPoint = new ChainedPoint(panel1.Width / 2, panel1.Height / 2, (int)Directions.Center);
+                int intImageHeight = Convert.ToInt32(ConfigurationManager.AppSettings["image-height"]);
+                ChainedPoint centerPoint = new ChainedPoint(intImageHeight / 2, intImageHeight / 2, (int)Directions.Center);
                 //ChainedPoint centerPoint = new ChainedPoint(length, length, (int)Directions.Southeast);
 
                 Pen originalPen = new Pen(listMaterialColors[0])
@@ -129,11 +337,6 @@ namespace Drawing_Fractals
                 listAllPoints.Add(centerPoint);
             }
 
-            if (countLayers > garbageCollectionSize * 2)
-            {
-                //listAllPoints.RemoveAll(p => p.LayerIndexAded < garbageCollectionSize);
-                garbageCollectionSize *= 2;
-            }
 
             List<ChainedPoint> listAlivePoints = listAllPoints.Where(p => p.Alive).ToList();
 
@@ -151,7 +354,8 @@ namespace Drawing_Fractals
                     colorIndex = 0;
                 }
             }
-            int j = 0;
+
+            dtLayerStart = DateTime.Now;
             foreach (ChainedPoint objChainedPoint in listAlivePoints)
             {
                 ChainedPoint newPoint1 = null;
@@ -315,6 +519,7 @@ namespace Drawing_Fractals
                 }
                 for (int i = 0; i < listNewPoints.Count; i++)
                 {
+                    dtPointStart = DateTime.Now;
                     ChainedPoint newPoint = listNewPoints[i];
                     //kill on edge
                     if (killOnEdge)
@@ -343,12 +548,16 @@ namespace Drawing_Fractals
 
                     listAllPoints.Add(newPoint);
 
-                    if (j % 64 == 0)
+                    PointDuration = DateTime.Now.Subtract(dtPointStart);
+                    if (newPoint.IsDiagonal())
                     {
-                        worker.ReportProgress(0, "right");
+                        longDiagonalTicks += PointDuration.Ticks;
                     }
-
-                    j++;
+                    else
+                    {
+                        longStraightTicks += PointDuration.Ticks;
+                    }
+                    worker.ReportProgress(0, "right");
                 }
 
                 rainbowPen.Dispose();
@@ -356,10 +565,31 @@ namespace Drawing_Fractals
                 objChainedPoint.Alive = false;
             }
 
+            LayerDuration = DateTime.Now.Subtract(dtLayerStart);
+
             //if (layerLimit > 0 && layerLimit == countLayers + 1)
             //{
             //    //timer.Stop();
             //}
+        }
+
+
+
+        public Image PictureBoxZoom(Image img, Size size)
+        {
+            Bitmap bm = new Bitmap(img, Convert.ToInt32(img.Width * size.Width), Convert.ToInt32(img.Height * size.Height));
+            Graphics grap = Graphics.FromImage(bm);
+            grap.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            return bm;
+        }
+
+        private void zoomSlider_Scroll(object sender, EventArgs e)
+        {
+            if (zoomSlider.Value > 0)
+            {
+                pictureBox1.Image = null;
+                pictureBox1.Image = PictureBoxZoom(TheBitmap, new Size(zoomSlider.Value, zoomSlider.Value));
+            }
         }
 
         private List<Color> GetColorList()
@@ -775,84 +1005,14 @@ namespace Drawing_Fractals
 
             return listMaterialColors;
         }
-
-        private void Form1_Load(object sender, System.EventArgs e)
+        private bool InterpretPathing(string pathing, int i)
         {
-            // Dock the PictureBox to the form and set its background to white.
-            //pictureBox1.Dock = DockStyle.Fill;
-            //pictureBox1.BackColor = Color.Gray;
-            // Connect the Paint event of the PictureBox to the event handler method.
-            //pictureBox1.Paint += this.pictureBox1_Paint;
+            List<char> listPathOrder = new List<char>();
+            listPathOrder.AddRange(pathing);
 
-            //FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.Manual;
-            Location = new Point(0, 0);
+            int index = i % listPathOrder.Count;
 
-            panel1.BackColor = ColorTranslator.FromHtml("#000000");
-
-            if (!generateInBackground)
-            {
-                pictureBox1.Paint += PictureBox1_Paint;
-            }
-
-            int intWindowHeight = Convert.ToInt32(ConfigurationManager.AppSettings["image-height"]);
-            const double goldenRatio = 1.61803398874989484820458683436;
-
-            int intWindowWidth = (int)Math.Round(intWindowHeight / (1 / goldenRatio));
-
-            TheBitmap = new System.Drawing.Bitmap(intWindowHeight, intWindowHeight);
-            panel1.Height = intWindowHeight;
-            panel1.Width = intWindowHeight;
-            pictureBox1.Height = intWindowHeight;
-            pictureBox1.Width = intWindowHeight;
-
-            //panel1.AutoScroll = true;
-
-            // Add the PictureBox control to the Form.
-            //this.Controls.Add(pictureBox1);
-            Controls.Add(panel1);
-
-            panel1.Controls.Add(pictureBox1);
-
-            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
-
-            pictureBox1.Click += PictureBox1_Click;
-
-            //timer.Interval = layerGenerationRate;
-            //timer.Tick += Timer_Tick;
-
-            //timer.Enabled = true;
-
-            //timer.Start();
-
-            System.ComponentModel.BackgroundWorker backgroundWorker = new System.ComponentModel.BackgroundWorker();
-
-            backgroundWorker.DoWork += BackgroundWorker1_DoWork;
-            backgroundWorker.RunWorkerCompleted += backgroundWorker1_RunWorkerCompleted;
-            backgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
-            backgroundWorker.WorkerReportsProgress = true;
-
-            Graphics g = Graphics.FromImage(TheBitmap);
-
-            backgroundWorker.RunWorkerAsync(g);
-
-            //Task.Factory.StartNew(() =>
-            //{
-            //    using (Graphics g = Graphics.FromImage(TheBitmap))
-            //    {
-            //        while (layerLimit == 0 || layerLimit > countLayers)
-            //        {
-            //            DrawFractal(g);
-            //            countLayers++;
-            //        }
-            //            //do your drawing routines here
-            //        }
-            //        //invoke an action against the main thread to draw the buffer to the background image of the main form.
-            //        this.Invoke(new Action(pictureBox1.Refresh));
-            //});
-            //DrawFractal();
-
-            //pictureBox1.Refresh();
+            return listPathOrder[index] == '1';
         }
 
         private void PictureBox1_Click(object sender, EventArgs e)
@@ -866,72 +1026,53 @@ namespace Drawing_Fractals
 
                 case MouseButtons.Right:
                     // Right click
-                    TheBitmap.Save(@"C:\Fractals\" + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
+
+                    //TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
                     break;
             }
         }
 
-        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        public void SaveBitmap(object sender, EventArgs e)
         {
-            if (!generateInBackground)
+            strSavePath = @"C:\Fractals\" + pathing + @"\KillOnEdge-" + killOnEdge.ToString() + @"\X-Center-" + centerIsX.ToString() + @"\CenterMultiplier-" + centerMultiplier + @"\";
+            if (!Directory.Exists(strSavePath))
             {
-                pictureBox1.Refresh();
+                Directory.CreateDirectory(strSavePath);
+            }
+            TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
+        }
+
+        private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            panning = true;
+            startingPoint = new Point(e.Location.X - movingPoint.X,
+                                      e.Location.Y - movingPoint.Y);
+        }
+
+        private void PictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (panning)
+            {
+                movingPoint = new Point(e.Location.X - startingPoint.X,
+                                        e.Location.Y - startingPoint.Y);
+                pictureBox1.Invalidate();
             }
         }
 
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void PictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
-            // pictureBox1.Refresh();
-            //countLayers++;
+            panning = false;
         }
-
-        private void BackgroundWorker1_DoWork(object sender,
-            DoWorkEventArgs e)
-        {
-            // Get the BackgroundWorker that raised this event.
-            BackgroundWorker worker = sender as BackgroundWorker;
-
-            // Assign the result of the computation
-            // to the Result property of the DoWorkEventArgs
-            // object. This is will be available to the
-            // RunWorkerCompleted eventhandler.
-            Graphics g = (Graphics)e.Argument;
-            g.FillRectangle(new SolidBrush(ColorTranslator.FromHtml("#F5F5F6")), new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height));
-            while (layerLimit == 0 || layerLimit > countLayers)
-            {
-                DrawFractal(g, worker, e);
-                countLayers++;
-                worker.ReportProgress(0, "right");
-            }
-
-            if (generateInBackground)
-            {
-                TheBitmap.Save(@"C:\Fractals\" + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
-            }
-        }
-
         private void PictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            Graphics g = e.Graphics;
-            g.DrawImage(TheBitmap, 0, 0);
+            e.Graphics.Clear(Color.White);
+            e.Graphics.DrawImage(TheBitmap, movingPoint);
         }
-
-        private bool InterpretPathing(string pathing, int i)
-        {
-            List<char> listPathOrder = new List<char>();
-            listPathOrder.AddRange(pathing);
-
-            int index = i % listPathOrder.Count;
-
-            return listPathOrder[index] == '1';
-        }
-
         private void Timer_Tick(object sender, EventArgs e)
         {
             //DrawFractal();
 
             countLayers++;
         }
-
     }
 }
