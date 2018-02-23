@@ -29,19 +29,20 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lblDirectionRatio = new System.Windows.Forms.Label();
+            this.lblPointCount = new System.Windows.Forms.Label();
+            this.lblTotalDuration = new System.Windows.Forms.Label();
+            this.lblAveragePointDuration = new System.Windows.Forms.Label();
+            this.lblLastPointDuration = new System.Windows.Forms.Label();
+            this.lblAverageLayerDuration = new System.Windows.Forms.Label();
+            this.lblLastLayerDuration = new System.Windows.Forms.Label();
+            this.lblLayerCount = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.zoomSlider = new System.Windows.Forms.TrackBar();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
-            this.button1 = new System.Windows.Forms.Button();
-            this.lblLayerCount = new System.Windows.Forms.Label();
-            this.lblLastLayerDuration = new System.Windows.Forms.Label();
-            this.lblAverageLayerDuration = new System.Windows.Forms.Label();
-            this.lblLastPointDuration = new System.Windows.Forms.Label();
-            this.lblAveragePointDuration = new System.Windows.Forms.Label();
-            this.lblTotalDuration = new System.Windows.Forms.Label();
-            this.lblPointCount = new System.Windows.Forms.Label();
-            this.lblDirectionRatio = new System.Windows.Forms.Label();
+            this.lblGifProgress = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.zoomSlider)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -51,6 +52,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.lblGifProgress);
             this.panel1.Controls.Add(this.lblDirectionRatio);
             this.panel1.Controls.Add(this.lblPointCount);
             this.panel1.Controls.Add(this.lblTotalDuration);
@@ -69,6 +71,91 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(284, 261);
             this.panel1.TabIndex = 0;
+            // 
+            // lblDirectionRatio
+            // 
+            this.lblDirectionRatio.AutoSize = true;
+            this.lblDirectionRatio.Location = new System.Drawing.Point(4, 113);
+            this.lblDirectionRatio.Name = "lblDirectionRatio";
+            this.lblDirectionRatio.Size = new System.Drawing.Size(83, 13);
+            this.lblDirectionRatio.TabIndex = 12;
+            this.lblDirectionRatio.Text = "Direction Ratio: ";
+            // 
+            // lblPointCount
+            // 
+            this.lblPointCount.AutoSize = true;
+            this.lblPointCount.Location = new System.Drawing.Point(7, 28);
+            this.lblPointCount.Name = "lblPointCount";
+            this.lblPointCount.Size = new System.Drawing.Size(68, 13);
+            this.lblPointCount.TabIndex = 11;
+            this.lblPointCount.Text = "Point Count: ";
+            // 
+            // lblTotalDuration
+            // 
+            this.lblTotalDuration.AutoSize = true;
+            this.lblTotalDuration.Location = new System.Drawing.Point(4, 96);
+            this.lblTotalDuration.Name = "lblTotalDuration";
+            this.lblTotalDuration.Size = new System.Drawing.Size(80, 13);
+            this.lblTotalDuration.TabIndex = 10;
+            this.lblTotalDuration.Text = "Total Duration: ";
+            // 
+            // lblAveragePointDuration
+            // 
+            this.lblAveragePointDuration.AutoSize = true;
+            this.lblAveragePointDuration.Location = new System.Drawing.Point(4, 83);
+            this.lblAveragePointDuration.Name = "lblAveragePointDuration";
+            this.lblAveragePointDuration.Size = new System.Drawing.Size(117, 13);
+            this.lblAveragePointDuration.TabIndex = 9;
+            this.lblAveragePointDuration.Text = "Average Point Duration";
+            // 
+            // lblLastPointDuration
+            // 
+            this.lblLastPointDuration.AutoSize = true;
+            this.lblLastPointDuration.Location = new System.Drawing.Point(4, 70);
+            this.lblLastPointDuration.Name = "lblLastPointDuration";
+            this.lblLastPointDuration.Size = new System.Drawing.Size(103, 13);
+            this.lblLastPointDuration.TabIndex = 8;
+            this.lblLastPointDuration.Text = "Last Point Duration: ";
+            // 
+            // lblAverageLayerDuration
+            // 
+            this.lblAverageLayerDuration.AutoSize = true;
+            this.lblAverageLayerDuration.Location = new System.Drawing.Point(3, 57);
+            this.lblAverageLayerDuration.Name = "lblAverageLayerDuration";
+            this.lblAverageLayerDuration.Size = new System.Drawing.Size(119, 13);
+            this.lblAverageLayerDuration.TabIndex = 7;
+            this.lblAverageLayerDuration.Text = "Average Layer Duration";
+            // 
+            // lblLastLayerDuration
+            // 
+            this.lblLastLayerDuration.AutoSize = true;
+            this.lblLastLayerDuration.Location = new System.Drawing.Point(4, 44);
+            this.lblLastLayerDuration.Name = "lblLastLayerDuration";
+            this.lblLastLayerDuration.Size = new System.Drawing.Size(105, 13);
+            this.lblLastLayerDuration.TabIndex = 6;
+            this.lblLastLayerDuration.Text = "Last Layer Duration: ";
+            // 
+            // lblLayerCount
+            // 
+            this.lblLayerCount.AutoSize = true;
+            this.lblLayerCount.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.lblLayerCount.Dock = System.Windows.Forms.DockStyle.Left;
+            this.lblLayerCount.Location = new System.Drawing.Point(0, 0);
+            this.lblLayerCount.Name = "lblLayerCount";
+            this.lblLayerCount.Size = new System.Drawing.Size(76, 13);
+            this.lblLayerCount.TabIndex = 5;
+            this.lblLayerCount.Text = "Layer Count: 0";
+            // 
+            // button1
+            // 
+            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button1.Location = new System.Drawing.Point(209, 238);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 4;
+            this.button1.Text = "Save Image";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.SaveBitmap);
             // 
             // zoomSlider
             // 
@@ -105,90 +192,14 @@
             this.trackBar1.Size = new System.Drawing.Size(303, 45);
             this.trackBar1.TabIndex = 0;
             // 
-            // button1
+            // lblGifProgress
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(209, 238);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 4;
-            this.button1.Text = "Save Image";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.SaveBitmap);
-            // 
-            // lblLayerCount
-            // 
-            this.lblLayerCount.AutoSize = true;
-            this.lblLayerCount.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.lblLayerCount.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblLayerCount.Location = new System.Drawing.Point(0, 0);
-            this.lblLayerCount.Name = "lblLayerCount";
-            this.lblLayerCount.Size = new System.Drawing.Size(76, 13);
-            this.lblLayerCount.TabIndex = 5;
-            this.lblLayerCount.Text = "Layer Count: 0";
-            // 
-            // lblLastLayerDuration
-            // 
-            this.lblLastLayerDuration.AutoSize = true;
-            this.lblLastLayerDuration.Location = new System.Drawing.Point(4, 44);
-            this.lblLastLayerDuration.Name = "lblLastLayerDuration";
-            this.lblLastLayerDuration.Size = new System.Drawing.Size(105, 13);
-            this.lblLastLayerDuration.TabIndex = 6;
-            this.lblLastLayerDuration.Text = "Last Layer Duration: ";
-            // 
-            // lblAverageLayerDuration
-            // 
-            this.lblAverageLayerDuration.AutoSize = true;
-            this.lblAverageLayerDuration.Location = new System.Drawing.Point(3, 57);
-            this.lblAverageLayerDuration.Name = "lblAverageLayerDuration";
-            this.lblAverageLayerDuration.Size = new System.Drawing.Size(119, 13);
-            this.lblAverageLayerDuration.TabIndex = 7;
-            this.lblAverageLayerDuration.Text = "Average Layer Duration";
-            // 
-            // lblLastPointDuration
-            // 
-            this.lblLastPointDuration.AutoSize = true;
-            this.lblLastPointDuration.Location = new System.Drawing.Point(4, 70);
-            this.lblLastPointDuration.Name = "lblLastPointDuration";
-            this.lblLastPointDuration.Size = new System.Drawing.Size(103, 13);
-            this.lblLastPointDuration.TabIndex = 8;
-            this.lblLastPointDuration.Text = "Last Point Duration: ";
-            // 
-            // lblAveragePointDuration
-            // 
-            this.lblAveragePointDuration.AutoSize = true;
-            this.lblAveragePointDuration.Location = new System.Drawing.Point(4, 83);
-            this.lblAveragePointDuration.Name = "lblAveragePointDuration";
-            this.lblAveragePointDuration.Size = new System.Drawing.Size(117, 13);
-            this.lblAveragePointDuration.TabIndex = 9;
-            this.lblAveragePointDuration.Text = "Average Point Duration";
-            // 
-            // lblTotalDuration
-            // 
-            this.lblTotalDuration.AutoSize = true;
-            this.lblTotalDuration.Location = new System.Drawing.Point(4, 96);
-            this.lblTotalDuration.Name = "lblTotalDuration";
-            this.lblTotalDuration.Size = new System.Drawing.Size(80, 13);
-            this.lblTotalDuration.TabIndex = 10;
-            this.lblTotalDuration.Text = "Total Duration: ";
-            // 
-            // lblPointCount
-            // 
-            this.lblPointCount.AutoSize = true;
-            this.lblPointCount.Location = new System.Drawing.Point(7, 28);
-            this.lblPointCount.Name = "lblPointCount";
-            this.lblPointCount.Size = new System.Drawing.Size(68, 13);
-            this.lblPointCount.TabIndex = 11;
-            this.lblPointCount.Text = "Point Count: ";
-            // 
-            // lblDirectionRatio
-            // 
-            this.lblDirectionRatio.AutoSize = true;
-            this.lblDirectionRatio.Location = new System.Drawing.Point(4, 113);
-            this.lblDirectionRatio.Name = "lblDirectionRatio";
-            this.lblDirectionRatio.Size = new System.Drawing.Size(83, 13);
-            this.lblDirectionRatio.TabIndex = 12;
-            this.lblDirectionRatio.Text = "Direction Ratio: ";
+            this.lblGifProgress.AutoSize = true;
+            this.lblGifProgress.Location = new System.Drawing.Point(3, 126);
+            this.lblGifProgress.Name = "lblGifProgress";
+            this.lblGifProgress.Size = new System.Drawing.Size(70, 13);
+            this.lblGifProgress.TabIndex = 13;
+            this.lblGifProgress.Text = "Gif Progress: ";
             // 
             // Form1
             // 
@@ -225,6 +236,7 @@
         private System.Windows.Forms.Label lblLastPointDuration;
         private System.Windows.Forms.Label lblPointCount;
         private System.Windows.Forms.Label lblDirectionRatio;
+        private System.Windows.Forms.Label lblGifProgress;
     }
 }
 

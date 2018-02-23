@@ -5,9 +5,11 @@ using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using ImageMagick;
 
 namespace Drawing_Fractals
 {
@@ -29,6 +31,8 @@ namespace Drawing_Fractals
         private readonly string pathing = ConfigurationManager.AppSettings["pathing"];
         private readonly int straightMultiplier = Convert.ToInt32(ConfigurationManager.AppSettings["straight-multiplier"]);
         private readonly float width = Convert.ToSingle(ConfigurationManager.AppSettings["line-width"]);
+        private readonly bool saveImageEveryColor = Convert.ToBoolean(ConfigurationManager.AppSettings["save-image-every-color"]);
+        private int intLayerLastAutoSaved;
         private int colorIndex;
         // Cache font instead of recreating font objects each time we paint.
         private Font fnt = new Font("Arial", 10);
@@ -40,7 +44,6 @@ namespace Drawing_Fractals
         private bool panning = false;
         //private PictureBox pictureBox1 = new PictureBox();
         private Point startingPoint = Point.Empty;
-        private string strSavePath = "";
         private System.Drawing.Bitmap TheBitmap;
         private DateTime timeLastRefresh = DateTime.Now;
         //private Timer timer = new Timer();
@@ -56,6 +59,10 @@ namespace Drawing_Fractals
 
         private long longStraightTicks = 1;
         private long longDiagonalTicks;
+
+        private MagickImageCollection listImagesForGif = new MagickImageCollection();
+
+        private List<string> listPathsForGif = new List<string>();
 
         public Form1()
         {
@@ -133,6 +140,10 @@ namespace Drawing_Fractals
 
             lblDirectionRatio.BackColor = Color.Transparent;
             lblDirectionRatio.Parent = pictureBox1;
+
+            lblGifProgress.BackColor = Color.Transparent;
+            lblGifProgress.Parent = pictureBox1;
+            lblGifProgress.Visible = false;
             //panel1.AutoScroll = true;
 
             // Add the PictureBox control to the Form.
@@ -145,7 +156,6 @@ namespace Drawing_Fractals
 
             //pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
 
-            pictureBox1.Click += PictureBox1_Click;
             pictureBox1.Image = TheBitmap;
 
             pictureBox1.Invalidate();
@@ -163,11 +173,12 @@ namespace Drawing_Fractals
             backgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
             backgroundWorker.WorkerReportsProgress = true;
 
-            Graphics g = Graphics.FromImage(TheBitmap);
+            // Graphics g = Graphics.FromImage(TheBitmap);
 
             dtProcessStart = DateTime.Now;
 
-            backgroundWorker.RunWorkerAsync(g);
+            Bitmap cloneForDrawerThread = (Bitmap)TheBitmap.Clone();
+            backgroundWorker.RunWorkerAsync(cloneForDrawerThread);
 
             //Task.Factory.StartNew(() =>
             //{
@@ -190,22 +201,11 @@ namespace Drawing_Fractals
 
         public enum Directions { North, Northeast, East, Southeast, South, Southwest, West, Northwest, Center }
 
-        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            if (!generateInBackground)
-            {
-                if (DateTime.Now.AddMilliseconds(-33) > timeLastRefresh)
-                {
-                    pictureBox1.Refresh();
-                    UpdateLabels();
 
-                }
-            }
-        }
 
         private void UpdateLabels()
         {
-            timeLastRefresh = DateTime.Now;
+
             lblLayerCount.Text = "Layers: " + countLayers;
             lblLastLayerDuration.Text = "Last Layer Duration: " + LayerDuration.ToString();
             lblAverageLayerDuration.Text = "Average Layer Duration: " + new TimeSpan(DateTime.Now.Subtract(dtProcessStart).Ticks / countLayers).ToString();
@@ -230,29 +230,142 @@ namespace Drawing_Fractals
             // to the Result property of the DoWorkEventArgs
             // object. This is will be available to the
             // RunWorkerCompleted eventhandler.
-            Graphics g = (Graphics)e.Argument;
-            g.FillRectangle(new SolidBrush(ColorTranslator.FromHtml("#F5F5F6")), new Rectangle(0, 0, TheBitmap.Width, TheBitmap.Height));
+            Bitmap bitmapForDrawingOn = (Bitmap)e.Argument;
+
+            Graphics g = Graphics.FromImage(bitmapForDrawingOn);
+            g.FillRectangle(new SolidBrush(ColorTranslator.FromHtml("#F5F5F6")), new Rectangle(0, 0, bitmapForDrawingOn.Width, bitmapForDrawingOn.Height));
             while (layerLimit == 0 || layerLimit > countLayers)
             {
-                DrawFractal(g, worker, e);
+                DrawFractal(bitmapForDrawingOn, worker, e);
                 countLayers++;
-                worker.ReportProgress(0, "right");
+                worker.ReportProgress(0, bitmapForDrawingOn);
+
             }
 
-            if (generateInBackground)
+            e.Result = bitmapForDrawingOn;
+
+        }
+
+        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+
+            if (!generateInBackground)
             {
-                TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
+                if (DateTime.Now.AddMilliseconds(-42) > timeLastRefresh)
+                {
+                    timeLastRefresh = DateTime.Now;
+                    Bitmap oldBitmap = TheBitmap;
+                    Bitmap newBitmap = (Bitmap)e.UserState;
+                    TheBitmap = (Bitmap)newBitmap.Clone();
+                    oldBitmap.Dispose();
+
+                    pictureBox1.Image = TheBitmap;
+                    pictureBox1.Update();
+                    UpdateLabels();
+
+                }
+                if (saveImageEveryColor && countLayers % colorGroupingAmount == 0 && (intLayerLastAutoSaved < countLayers))
+                {
+                    SaveBitmap();
+                    intLayerLastAutoSaved = countLayers;
+                }
             }
+
         }
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            pictureBox1.Refresh();
+
             button1.BackColor = ColorTranslator.FromHtml("#4CAF50");
             button1.ForeColor = Color.White;
 
+            Bitmap oldBitmap = TheBitmap;
+            Bitmap newBitmap = (Bitmap)e.Result;
+            TheBitmap = (Bitmap)newBitmap.Clone();
+            oldBitmap.Dispose();
+            pictureBox1.Image = TheBitmap;
+            pictureBox1.Update();
             UpdateLabels();
+
+
+            if (generateInBackground)
+            {
+                SaveBitmap();
+            }
+
+            if (saveImageEveryColor)
+            {
+                CreateGif();
+            }
         }
+
+        private void CreateGif()
+        {
+            string strGifSavePath = @"C:\Fractals\" + pathing + @"\KillOnEdge-" + killOnEdge.ToString() + @"\X-Center-" + centerIsX.ToString() + @"\CenterMultiplier-" + centerMultiplier + @"\" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".gif";
+
+            BackgroundWorker gifWorker = new BackgroundWorker();
+
+            gifWorker.DoWork += ProcessGif;
+            gifWorker.WorkerReportsProgress = true;
+            gifWorker.ProgressChanged += GifWorker_ProgressChanged;
+
+            lblGifProgress.Visible = true;
+            lblGifProgress.Text = "Gif Progress:  0%";
+            gifWorker.RunWorkerAsync(strGifSavePath);
+
+
+        }
+
+        private void GifWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            lblGifProgress.Text = "Gif Progress:  " + e.ProgressPercentage + "%";
+        }
+
+        private void ProcessGif(object sender, DoWorkEventArgs e)
+        {
+
+            string strGifSavePath = (string)e.Argument;
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            List<string> listPathsReverse = listPathsForGif.ToList();
+            listPathsReverse = listPathsReverse.Reverse<string>().ToList();
+            //listPathsReverse.RemoveAt(0);
+            //listPathsReverse.RemoveAt(listPathsReverse.Count - 1);
+
+            listPathsForGif.AddRange(listPathsReverse);
+
+            for (int j = 0; j < listPathsForGif.Count; j++)
+            {
+                listImagesForGif.Add(new MagickImage(listPathsForGif[j]));
+                worker.ReportProgress((int)Math.Round((j + 1.0) / (listPathsForGif.Count + 0.0) * 50));
+            }
+            using (listImagesForGif)
+            {
+                for (int i = 0; i < listImagesForGif.Count; i++)
+                {
+                    listImagesForGif[i].AnimationDelay = 42;
+                    listImagesForGif[i].Resize(1080, 1080);
+                    worker.ReportProgress(50 + (int)Math.Round((i + 1.0) / (listImagesForGif.Count + 0.0) * 49));
+
+                }
+
+                // Optionally reduce colors
+                //QuantizeSettings settings = new QuantizeSettings
+                //{
+                //    Colors = 256
+                //};
+                //listImagesForGif.Quantize(settings);
+
+                // Optionally optimize the images (images should have the same size).
+                listImagesForGif.Optimize();
+
+                // Save gif
+                listImagesForGif.Write(strGifSavePath);
+
+                worker.ReportProgress(100);
+            }
+        }
+
 
         private ChainedPoint CheckForDiagonalIntersection(ChainedPoint objPoint, List<ChainedPoint> listDiagonalPoints, int length)
         {
@@ -311,10 +424,10 @@ namespace Drawing_Fractals
             return objPoint;
         }
 
-        private void DrawFractal(Graphics g, BackgroundWorker worker, DoWorkEventArgs e)
+        private void DrawFractal(Bitmap bitmapForDrawingOn, BackgroundWorker worker, DoWorkEventArgs e)
         {
             // Create a local version of the graphics object for the PictureBox.
-            //Graphics g = Graphics.FromImage(TheBitmap);
+            Graphics g = Graphics.FromImage(bitmapForDrawingOn);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
             List<Color> listMaterialColors = new List<Color>();
@@ -557,7 +670,7 @@ namespace Drawing_Fractals
                     {
                         longStraightTicks += PointDuration.Ticks;
                     }
-                    worker.ReportProgress(0, "right");
+                    worker.ReportProgress(0, bitmapForDrawingOn);
                 }
 
                 rainbowPen.Dispose();
@@ -1015,31 +1128,38 @@ namespace Drawing_Fractals
             return listPathOrder[index] == '1';
         }
 
-        private void PictureBox1_Click(object sender, EventArgs e)
-        {
-            MouseEventArgs me = (MouseEventArgs)e;
-            switch (me.Button)
-            {
-                case MouseButtons.Left:
-                    // Left click
-                    break;
 
-                case MouseButtons.Right:
-                    // Right click
-
-                    //TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
-                    break;
-            }
-        }
 
         public void SaveBitmap(object sender, EventArgs e)
         {
-            strSavePath = @"C:\Fractals\" + pathing + @"\KillOnEdge-" + killOnEdge.ToString() + @"\X-Center-" + centerIsX.ToString() + @"\CenterMultiplier-" + centerMultiplier + @"\";
+            SaveBitmap();
+        }
+
+        public void SaveBitmap()
+        {
+            string strSavePath = @"C:\Fractals\" + pathing + @"\KillOnEdge-" + killOnEdge.ToString() + @"\X-Center-" + centerIsX.ToString() + @"\CenterMultiplier-" + centerMultiplier + @"\";
             if (!Directory.Exists(strSavePath))
             {
                 Directory.CreateDirectory(strSavePath);
             }
-            TheBitmap.Save(strSavePath + countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".bmp");
+            strSavePath += countLayers + "-" + color + "-" + colorGroupingAmount + " " + DateTime.Now.ToString("MM-dd-yyyy--hh-mm-ss") + ".png";
+
+            BackgroundWorker saverWorker = new BackgroundWorker();
+            saverWorker.DoWork += SaveBitmapOnThread;
+
+            Bitmap bitmapForSaving = (Bitmap)TheBitmap.Clone();
+
+            saverWorker.RunWorkerAsync(new BitmapPathCombo(bitmapForSaving, strSavePath));
+        }
+
+        private void SaveBitmapOnThread(object sender, DoWorkEventArgs e)
+        {
+            BitmapPathCombo combo = (BitmapPathCombo)e.Argument;
+
+            combo.bitmap.Save(combo.path, ImageFormat.Png);
+
+            listPathsForGif.Add(combo.path);
+
         }
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
@@ -1073,6 +1193,18 @@ namespace Drawing_Fractals
             //DrawFractal();
 
             countLayers++;
+        }
+    }
+
+    public class BitmapPathCombo
+    {
+        public Bitmap bitmap { get; set; }
+        public string path { get; set; }
+
+        public BitmapPathCombo(Bitmap bitmap, string path)
+        {
+            this.bitmap = bitmap;
+            this.path = path;
         }
     }
 }

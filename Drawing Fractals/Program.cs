@@ -27,6 +27,7 @@ namespace Drawing_Fractals
             };
 
             //myForm.AutoScroll = true;
+            myForm.Text = ConfigurationManager.AppSettings["pathing"];
 
             Application.Run(myForm);
         }
